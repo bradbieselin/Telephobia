@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../lib/AuthContext';
 import { isOnboardingComplete } from '../lib/onboarding';
@@ -21,22 +21,14 @@ export default function IndexScreen() {
       router.replace('/(auth)/sign-in');
     } else if (!onboardingDone) {
       router.replace('/(onboarding)/welcome');
+    } else {
+      router.replace('/(tabs)/scripts');
     }
   }, [isAuthenticated, loading, onboardingDone]);
 
-  // Still loading
-  if (loading || onboardingDone === null) {
-    return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
-    );
-  }
-
-  // Authenticated + onboarded = home screen
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>Telephobia</Text>
+      <ActivityIndicator size="large" color={colors.primary} />
     </View>
   );
 }

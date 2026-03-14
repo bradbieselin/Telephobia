@@ -32,7 +32,7 @@ export default function CompleteScreen() {
         // Still proceed even if profile creation fails
       }
 
-      router.replace('/');
+      router.replace('/(tabs)/scripts');
     }
 
     finish();
