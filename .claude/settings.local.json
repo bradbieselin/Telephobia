@@ -19,7 +19,10 @@
       "Bash(npx:*)",
       "Bash(npm view:*)",
       "Bash(node:*)",
-      "Bash(SUPABASE_ACCESS_TOKEN=sbp_5364afaec7d2fc2494d17170eefa18c3769a6ca8 npx supabase projects api-keys --project-ref etggdixnzkrgsffmsrig 2>&1)"
+      "Bash(SUPABASE_ACCESS_TOKEN=sbp_5364afaec7d2fc2494d17170eefa18c3769a6ca8 npx supabase projects api-keys --project-ref etggdixnzkrgsffmsrig 2>&1)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(ls:*)"
     ],
     "deny": []
   }
