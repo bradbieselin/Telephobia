@@ -7,7 +7,8 @@ import { supabase } from './supabase';
 WebBrowser.maybeCompleteAuthSession();
 
 export async function signInWithApple() {
-  const nonce = Math.random().toString(36).substring(2, 18);
+  const rawBytes = await Crypto.getRandomBytesAsync(32);
+  const nonce = Array.from(rawBytes, (b) => b.toString(16).padStart(2, '0')).join('');
   const hashedNonce = await Crypto.digestStringAsync(
     Crypto.CryptoDigestAlgorithm.SHA256,
     nonce
