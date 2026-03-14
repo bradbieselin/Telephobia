@@ -10,6 +10,7 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -53,6 +54,11 @@ export default function NewScriptScreen() {
   async function handleGenerate() {
     if (!situation.trim()) return;
 
+    if (!API_URL) {
+      Alert.alert('Configuration Error', 'API URL is not configured. Please set EXPO_PUBLIC_API_URL.');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -80,12 +86,17 @@ export default function NewScriptScreen() {
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
+        if (res.status === 403) {
+          throw new Error("You've used all 3 free scripts. Upgrade to Pro for unlimited scripts.");
+        }
         throw new Error(err.error || 'Failed to generate script');
       }
 
       const data = await res.json();
       router.replace(`/(tabs)/scripts/${data.script.id}`);
-    } catch {
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : 'Something went wrong. Please try again.';
+      Alert.alert('Error', message);
       setLoading(false);
     }
   }

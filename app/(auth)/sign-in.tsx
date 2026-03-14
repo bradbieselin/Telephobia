@@ -57,6 +57,11 @@ export default function AuthScreen() {
       return;
     }
 
+    if (isSignUp && password.length < 8) {
+      Alert.alert('Error', 'Password must be at least 8 characters.');
+      return;
+    }
+
     try {
       setLoading(true);
       if (isSignUp) {

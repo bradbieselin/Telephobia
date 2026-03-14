@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -59,10 +59,6 @@ export default function ScriptsListScreen() {
       fetchScripts();
     }, [fetchScripts])
   );
-
-  useEffect(() => {
-    fetchScripts();
-  }, [fetchScripts]);
 
   function formatDate(dateStr: string) {
     const d = new Date(dateStr);

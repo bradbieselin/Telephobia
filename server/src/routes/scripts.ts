@@ -11,6 +11,27 @@ const supabase = createClient(
 
 const router = Router();
 
+const ALLOWED_CATEGORIES = [
+  'Medical',
+  'Housing',
+  'Work',
+  'Money',
+  'Auto',
+  'Government',
+  'Personal',
+];
+
+const MAX_SITUATION_LENGTH = 500;
+const MAX_CONTEXT_LENGTH = 500;
+
+/** Strip attempts to inject system/assistant role markers from user input. */
+function sanitizeInput(input: string): string {
+  return input
+    .replace(/\b(system|assistant)\s*:/gi, '')
+    .replace(/<\|.*?\|>/g, '')
+    .trim();
+}
+
 interface ScriptResponse {
   opening: string;
   keyPoints: string[];
@@ -48,31 +69,52 @@ router.post('/generate', requireAuth, async (req: Request, res: Response) => {
       return;
     }
 
-    // Check user limits
-    const { data: user, error: userError } = await supabase
-      .from('users')
-      .select('is_pro, free_scripts_used')
-      .eq('id', userId)
-      .single();
-
-    if (userError || !user) {
-      res.status(404).json({ error: 'User profile not found' });
+    if (situation.length > MAX_SITUATION_LENGTH) {
+      res.status(400).json({ error: `situation must be at most ${MAX_SITUATION_LENGTH} characters` });
       return;
     }
 
-    if (!user.is_pro && user.free_scripts_used >= 3) {
-      res.status(403).json({
-        error: 'Free script limit reached',
-        limit: 3,
-        used: user.free_scripts_used,
-      });
+    if (context !== undefined && typeof context === 'string' && context.length > MAX_CONTEXT_LENGTH) {
+      res.status(400).json({ error: `context must be at most ${MAX_CONTEXT_LENGTH} characters` });
       return;
     }
+
+    if (category !== undefined && !ALLOWED_CATEGORIES.includes(category)) {
+      res.status(400).json({ error: `Invalid category. Allowed: ${ALLOWED_CATEGORIES.join(', ')}` });
+      return;
+    }
+
+    // Atomically claim a free script slot (or pass through for pro users).
+    // The RPC returns the updated user row only if the limit check passes.
+    const { data: claimedUser, error: claimError } = await supabase.rpc(
+      'claim_free_script',
+      { user_id: userId }
+    );
+
+    if (claimError || !claimedUser) {
+      // Could be "not found" or "limit reached"
+      const msg = claimError?.message ?? 'User profile not found';
+      const status = msg.includes('limit reached') ? 403 : 404;
+      if (status === 403) {
+        res.status(403).json({
+          error: 'Free script limit reached',
+          limit: 3,
+          used: 3,
+        });
+      } else {
+        res.status(status).json({ error: msg });
+      }
+      return;
+    }
+
+    // Sanitize user input to prevent prompt injection
+    const cleanSituation = sanitizeInput(situation);
+    const cleanContext = context ? sanitizeInput(context) : undefined;
 
     // Build user message
-    let userMessage = `Situation: ${situation}`;
+    let userMessage = `Situation: ${cleanSituation}`;
     if (category) userMessage += `\nCategory: ${category}`;
-    if (context) userMessage += `\nAdditional context: ${context}`;
+    if (cleanContext) userMessage += `\nAdditional context: ${cleanContext}`;
 
     // Call Claude with one retry on parse failure
     let script: ScriptResponse;
@@ -89,7 +131,7 @@ router.post('/generate', requireAuth, async (req: Request, res: Response) => {
       .from('scripts')
       .insert({
         user_id: userId,
-        situation,
+        situation: cleanSituation,
         script_content: script,
         category: category || null,
       })
@@ -101,16 +143,8 @@ router.post('/generate', requireAuth, async (req: Request, res: Response) => {
       return;
     }
 
-    // Increment free_scripts_used for free users
-    if (!user.is_pro) {
-      await supabase
-        .from('users')
-        .update({ free_scripts_used: user.free_scripts_used + 1 })
-        .eq('id', userId);
-    }
-
     res.json({ script: savedScript });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Script generation error:', err);
     res.status(500).json({ error: 'Failed to generate script' });
   }

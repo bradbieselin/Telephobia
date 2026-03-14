@@ -40,13 +40,19 @@ export default function ScriptDetailScreen() {
   async function handleToggleFavorite() {
     if (!script) return;
 
-    const newValue = !script.is_favorite;
+    const previousValue = script.is_favorite;
+    const newValue = !previousValue;
     setScript({ ...script, is_favorite: newValue });
 
-    await supabase
+    const { error } = await supabase
       .from('scripts')
       .update({ is_favorite: newValue })
       .eq('id', script.id);
+
+    if (error) {
+      // Rollback optimistic update on failure
+      setScript((prev) => prev ? { ...prev, is_favorite: previousValue } : prev);
+    }
   }
 
   if (loading) {

@@ -9,30 +9,22 @@ interface AuthState {
   loading: boolean;
 }
 
-const AuthContext = createContext<AuthState>({
-  session: null,
-  user: null,
-  isAuthenticated: false,
-  loading: true,
-});
+const AuthContext = createContext<AuthState | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log('[AUTH] Getting session...');
     supabase.auth
       .getSession()
       .then(({ data: { session: s } }) => {
-        console.log('[AUTH] Session result:', s ? 'has session' : 'no session');
         setSession(s);
       })
-      .catch((e) => {
-        console.log('[AUTH] Session error:', e);
+      .catch(() => {
+        // Session retrieval failed; user stays unauthenticated
       })
       .finally(() => {
-        console.log('[AUTH] Loading complete');
         setLoading(false);
       });
 
