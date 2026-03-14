@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash",
+      "Read",
+      "Write",
+      "Edit",
+      "Glob",
+      "Grep",
+      "WebFetch",
+      "WebSearch",
+      "NotebookEdit",
+      "mcp__*",
+      "Bash(where supabase:*)",
+      "Bash(npx supabase:*)",
+      "Bash(SUPABASE_ACCESS_TOKEN=sbp_5364afaec7d2fc2494d17170eefa18c3769a6ca8 npx supabase link --project-ref etggdixnzkrgsffmsrig 2>&1)",
+      "Bash(SUPABASE_ACCESS_TOKEN=sbp_5364afaec7d2fc2494d17170eefa18c3769a6ca8 npx supabase db push 2>&1)",
+      "Bash(cd server:*)",
+      "Bash(npx:*)",
+      "Bash(npm view:*)",
+      "Bash(node:*)",
+      "Bash(SUPABASE_ACCESS_TOKEN=sbp_5364afaec7d2fc2494d17170eefa18c3769a6ca8 npx supabase projects api-keys --project-ref etggdixnzkrgsffmsrig 2>&1)"
+    ],
+    "deny": []
+  }
+}
